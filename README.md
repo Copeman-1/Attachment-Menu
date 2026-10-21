@@ -1,4 +1,6 @@
 # attachmenu
+<img width="325" height="608" alt="Screenshot 2026-10-21 064428" src="https://github.com/user-attachments/assets/607b07a1-e308-4a86-a88d-fcd3af0fce20" />
+<img width="323" height="258" alt="Screenshot 2026-10-21 064441" src="https://github.com/user-attachments/assets/ddcfa1ce-9ead-42c2-8d85-010e662f3e34" />
 
 A weapon attachment menu for **qb-core** and **ox_inventory**, built with **ox_lib** context menus. Written with the Marko Mods weapon pack in mind, but it works with any weapon that has components defined in ox_inventory.
 
