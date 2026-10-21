@@ -4,6 +4,11 @@ Config = {}
 -- (you can still open it with exports['attachmenu']:openMenu()).
 Config.Command = 'attachments'
 
+-- Checks GitHub on resource start and prints a console message if a newer version
+-- is available. Nothing is downloaded or changed - it only reads the latest version
+-- number. Set to false to disable.
+Config.UpdateCheck = true
+
 -- Who can use the menu. Leave empty ({}) to allow everyone.
 -- Format: [jobName] = minimumGrade
 -- Example: { gunsmith = 0, police = 3 }

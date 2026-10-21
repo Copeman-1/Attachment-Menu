@@ -126,3 +126,76 @@ lib.callback.register('attachmenu:toggle', function(src, slotNumber, componentNa
         removed = removedName,
     }
 end)
+
+-- ---------------------------------------------------------------------------
+-- Update check (disable with Config.UpdateCheck = false)
+-- ---------------------------------------------------------------------------
+
+local REPO = 'Copeman-1/Attachment-Menu'
+
+--- "v1.2.3" / "1.2" -> { 1, 2, 3 }
+local function parseVersion(str)
+    if type(str) ~= 'string' then return end
+
+    local parts = {}
+    for n in str:gsub('^%s*[vV]', ''):gmatch('%d+') do
+        parts[#parts + 1] = tonumber(n)
+        if #parts == 3 then break end
+    end
+
+    if #parts == 0 then return end
+    return parts
+end
+
+local function isNewer(latest, current)
+    for i = 1, 3 do
+        local a, b = latest[i] or 0, current[i] or 0
+        if a ~= b then return a > b end
+    end
+    return false
+end
+
+local function reportVersion(current, latestStr)
+    local latest, installed = parseVersion(latestStr), parseVersion(current)
+    if not latest or not installed then return end
+
+    local name = GetCurrentResourceName()
+
+    if isNewer(latest, installed) then
+        print(('^3[%s] Update available: you are on v%s, latest is v%s^7'):format(
+            name, current, table.concat(latest, '.')))
+        print(('^3[%s] Download it from https://github.com/%s^7'):format(name, REPO))
+    else
+        print(('^2[%s] You are running the latest version (v%s)^7'):format(name, current))
+    end
+end
+
+local function checkForUpdate()
+    local current = GetResourceMetadata(GetCurrentResourceName(), 'version', 0)
+    if not current then return end
+
+    -- Prefer the latest GitHub release; if the repo has none yet, fall back to the
+    -- version written in fxmanifest.lua on the main branch.
+    PerformHttpRequest(('https://api.github.com/repos/%s/releases/latest'):format(REPO), function(status, body)
+        if status == 200 and body then
+            local ok, data = pcall(json.decode, body)
+            if ok and type(data) == 'table' and data.tag_name then
+                return reportVersion(current, data.tag_name)
+            end
+        end
+
+        PerformHttpRequest(('https://raw.githubusercontent.com/%s/main/fxmanifest.lua'):format(REPO), function(s, b)
+            if s ~= 200 or not b then
+                return print(('^3[%s] Could not check for updates (HTTP %s)^7'):format(GetCurrentResourceName(), tostring(s)))
+            end
+
+            reportVersion(current, b:match("version%s+['\"]([^'\"]+)['\"]"))
+        end, 'GET')
+    end, 'GET', '', { ['User-Agent'] = 'attachmenu-update-check' })
+end
+
+CreateThread(function()
+    if not Config.UpdateCheck then return end
+    Wait(5000) -- let the server finish starting before making a web request
+    checkForUpdate()
+end)
